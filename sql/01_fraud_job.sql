@@ -15,7 +15,8 @@ CREATE TABLE market_quotes (
   'topic' = 'market_quotes',
   'properties.bootstrap.servers' = 'kafka:29092',
   'properties.group.id' = 'flink-quotes',
-  'scan.startup.mode' = 'latest-offset',
+  'scan.startup.mode' = 'group-offsets',
+  'properties.auto.offset.reset' = 'latest',
   'format' = 'json',
   'json.timestamp-format.standard' = 'ISO-8601'
 );
@@ -31,7 +32,8 @@ CREATE TABLE trade_executions (
   'topic' = 'trade_executions',
   'properties.bootstrap.servers' = 'kafka:29092',
   'properties.group.id' = 'flink-trades',
-  'scan.startup.mode' = 'latest-offset',
+  'scan.startup.mode' = 'group-offsets',
+  'properties.auto.offset.reset' = 'latest',
   'format' = 'json',
   'json.timestamp-format.standard' = 'ISO-8601'
 );
@@ -48,7 +50,10 @@ CREATE TABLE fraud_alerts (
   'topic' = 'fraud_alerts',
   'properties.bootstrap.servers' = 'kafka:29092',
   'format' = 'json',
-  'json.timestamp-format.standard' = 'ISO-8601'
+  'json.timestamp-format.standard' = 'ISO-8601',
+  'sink.delivery-guarantee' = 'exactly-once',
+  'sink.transactional-id-prefix' = 'fraud-alerts-sink',
+  'properties.transaction.timeout.ms' = '600000'   -- < transaction.max.timeout.ms do broker (15 min)
 );
 
 EXECUTE STATEMENT SET

@@ -1,5 +1,6 @@
 .RECIPEPREFIX = >
 PY = .venv/bin/python
+JOB_ID = $$(docker compose exec -T jobmanager ./bin/flink list -r 2>/dev/null | grep fraud-surveillance | awk '{print $$4}')
 
 up:
 > docker compose up -d --build
@@ -15,11 +16,24 @@ sql:
 job:
 > docker compose exec -T jobmanager ./bin/sql-client.sh -f /opt/sql/01_fraud_job.sql
 
+# Para o job tirando um savepoint (use antes de mudar o SQL / fazer deploy)
+savepoint:
+> docker compose exec -T jobmanager ./bin/flink stop --savepointPath /opt/flink/savepoints $(JOB_ID)
+
+savepoints:
+> docker compose exec -T jobmanager ls -1 /opt/flink/savepoints
+
+# Retoma o job de um savepoint: make restore SP=/opt/flink/savepoints/savepoint-XXXXXX-YYYYYY
+restore:
+> @test -n "$(SP)" || (echo "Uso: make restore SP=/opt/flink/savepoints/savepoint-XXXX"; exit 1)
+> echo "SET 'execution.savepoint.path' = '$(SP)';" | docker compose exec -T jobmanager sh -c "cat > /tmp/init.sql"
+> docker compose exec -T jobmanager ./bin/sql-client.sh -i /tmp/init.sql -f /opt/sql/01_fraud_job.sql
+
 producer:
 > $(PY) app/producer.py
 
 console:
-> docker compose exec kafka kafka-console-consumer --bootstrap-server kafka:29092 --topic fraud_alerts
+> docker compose exec kafka kafka-console-consumer --bootstrap-server kafka:29092 --topic fraud_alerts --isolation-level read_committed
 
 api:
 > $(PY) app/alert_api.py
