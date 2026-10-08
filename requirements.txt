@@ -1,0 +1,7 @@
+confluent-kafka
+fastapi
+uvicorn
+requests
+mcp
+langgraph
+langchain-core
