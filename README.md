@@ -4,38 +4,33 @@ Este projeto implementa uma plataforma de monitoramento de mercado financeiro em
 
 🏗️ Arquitetura do Sistema
 
-```mermaid ... 
+````mermaid
 graph TD
-    %% Fontes de Dados e Streaming
     subgraph Streaming ["Camada de Streaming & Processamento (Docker)"]
         Kafka["Apache Kafka<br/>(Tópicos: market_quotes, trade_executions, fraud_alerts)"] -->|Stream de Dados| Flink["Apache Flink SQL<br/>(Watermarks, Interval Joins, Tumbling Windows)"]
         Flink -->|Eventos de Fraude| Kafka
     end
 
-    %% Protocolo MCP
     subgraph MCP_Layer ["Camada de Contexto (MCP)"]
         Kafka -->|Consome fraud_alerts| MCPServer["Servidor MCP<br/>(mcp_flink_server.py / Stdio)"]
     end
 
-    %% Agente Inteligente
     subgraph Agent_Layer ["Camada de Inteligência & Agente"]
         MCPServer -->|Fornece Dados via Ferramenta| Agent["Agente LangGraph / LangChain<br/>(Triagem: HIGH / MEDIUM)"]
     end
 
-    %% API e Destino
     subgraph Destination ["Camada de Notificação & Testes"]
         Agent -->|Dispara Alerta (POST)| FastAPI["API de Alertas (FastAPI)<br/>(localhost:8000/api/alerts)"]
         FastAPI -->|Testado por| Postman["Postman / Desenvolvedor"]
     end
 
-    %% Estilos visuais
     style Streaming fill:#f9f,stroke:#333,stroke-width:2px
     style MCP_Layer fill:#bbf,stroke:#333,stroke-width:2px
     style Agent_Layer fill:#bfb,stroke:#333,stroke-width:2px
     style Destination fill:#ff9,stroke:#333,stroke-width:2px
-```
+````
 
-🧠 Conceitos de Engenharia de Streams Explorados
+## 🧠 Conceitos de Engenharia de Streams Explorados
 
 O projeto serve como um laboratório prático para dominar conceitos avançados de processamento de fluxos e arquiteturas orientadas a eventos:
 
